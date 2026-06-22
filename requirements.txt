@@ -1,0 +1,8 @@
+websockets
+httpx
+certifi
+pyfiglet
+beautifulsoup4
+fake-useragent
+rich
+git+https://github.com/cleitonleonel/pyquotex.git
