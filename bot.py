@@ -3,6 +3,8 @@ import time
 import logging
 import os
 import json
+import threading
+from http.server import HTTPServer, BaseHTTPRequestHandler
 logging.disable(logging.CRITICAL)
 from pyquotex.stable_api import Quotex
 
@@ -23,6 +25,28 @@ OTC_PAIRS = [
     "EURCAD_otc",
     "AUDCHF_otc",
 ]
+
+
+# ---------- Dummy HTTP server (Render port binding fix) ----------
+class _PingHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.send_header("Content-type", "text/plain")
+        self.end_headers()
+        self.wfile.write(b"Bot is running")
+
+    def log_message(self, format, *args):
+        pass  # mute http server logs
+
+
+def run_dummy_server():
+    port = int(os.environ.get("PORT", 10000))
+    server = HTTPServer(("0.0.0.0", port), _PingHandler)
+    print(f"🌐 Dummy server listening on port {port} (for Render port scan)")
+    server.serve_forever()
+
+
+# ---------- Rest of your bot logic (unchanged) ----------
 
 def inject_session():
     """Session file inject karo taaki Render pe login bypass ho"""
@@ -193,4 +217,9 @@ async def main():
     print(f"💰 Final: ${final:.2f} | P&L: ${final-start:+.2f}")
     await client.close()
 
-asyncio.run(main())
+
+if __name__ == "__main__":
+    # Dummy server background thread mein chalao taaki Render port detect kar le
+    threading.Thread(target=run_dummy_server, daemon=True).start()
+    asyncio.run(main())
+            
